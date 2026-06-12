@@ -25,7 +25,13 @@ compartment_ocid = "ocid1.compartment.oc1.."
 home_ip_cidr     = "YOUR_HOME_PUBLIC_IP/32"
 ```
 
-By default, `166.205.97.28/32` is also allowed.
+By default, `166.205.97.28/32` is also allowed. If your current computer is on
+a different public IP than your home connection, add it as an extra allowed
+source:
+
+```hcl
+extra_allowed_cidrs = ["YOUR_CURRENT_PUBLIC_IP/32"]
+```
 
 ## Commands
 
