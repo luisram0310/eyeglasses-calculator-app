@@ -1,22 +1,24 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f4fafc;
-  --foreground: #12303f;
-  --ink: #12303f;
-  --muted: #5c7280;
-  --line: #c9dde6;
+  --background: #f8f5ef;
+  --foreground: #191715;
+  --ink: #191715;
+  --muted: #716a60;
+  --line: #ddd1bf;
   --panel: #ffffff;
-  --panel-soft: #eef8fb;
-  --blue: #0057a8;
-  --blue-dark: #003d77;
-  --cyan: #42c4d6;
-  --green: #13795b;
-  --green-soft: #e7f6ef;
-  --amber: #a05a00;
-  --amber-soft: #fff3dc;
-  --red: #bd3042;
-  --red-soft: #fdecef;
+  --panel-soft: #f4eee4;
+  --rose: #d0909e;
+  --rose-dark: #9f6171;
+  --gold: #be9c3a;
+  --sand: #e2d3b6;
+  --mist: #e6eeef;
+  --green: #396f59;
+  --green-soft: #e9f3ed;
+  --amber: #8f6120;
+  --amber-soft: #fff2d8;
+  --red: #a33d50;
+  --red-soft: #fae9ed;
   --peach: #fff4ed;
 }
 
@@ -38,9 +40,10 @@ html {
 body {
   margin: 0;
   background:
-    linear-gradient(180deg, #eaf8fc 0%, #f6fbf7 48%, #fff7f0 100%);
+    radial-gradient(circle at top left, rgba(208, 144, 158, 0.24), transparent 34rem),
+    linear-gradient(180deg, #f9f2eb 0%, #f8f5ef 42%, #e6eeef 100%);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: Poppins, Mulish, Arial, Helvetica, sans-serif;
 }
 
 button,
@@ -79,22 +82,21 @@ button {
   min-width: 0;
 }
 
-.brand-mark {
-  display: grid;
-  width: 52px;
-  height: 52px;
+.brand-logo {
+  width: 104px;
+  height: 60px;
   flex: 0 0 auto;
-  place-items: center;
+  object-fit: contain;
   border-radius: 8px;
-  background: var(--blue);
-  color: #ffffff;
-  font-weight: 800;
+  background: #191715;
+  padding: 8px;
+  box-shadow: 0 10px 28px rgba(82, 58, 40, 0.14);
 }
 
 .brand p,
 .panel-heading p {
   margin: 0 0 4px;
-  color: var(--blue);
+  color: var(--rose-dark);
   font-size: 0.76rem;
   font-weight: 800;
   letter-spacing: 0;
@@ -129,12 +131,12 @@ button {
 .ghost-button {
   border: 1px solid var(--line);
   background: #ffffff;
-  color: var(--blue-dark);
+  color: var(--ink);
 }
 
 .solid-button {
-  border: 1px solid var(--blue);
-  background: var(--blue);
+  border: 1px solid var(--rose-dark);
+  background: var(--rose);
   color: #ffffff;
 }
 
@@ -149,7 +151,7 @@ button {
   border: 1px solid var(--line);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.96);
-  box-shadow: 0 18px 42px rgba(31, 93, 128, 0.12);
+  box-shadow: 0 18px 42px rgba(82, 58, 40, 0.12);
 }
 
 .input-panel,
@@ -217,8 +219,8 @@ select {
 
 input:focus,
 select:focus {
-  border-color: var(--blue);
-  box-shadow: 0 0 0 3px rgba(66, 196, 214, 0.25);
+  border-color: var(--rose);
+  box-shadow: 0 0 0 3px rgba(208, 144, 158, 0.24);
 }
 
 .money-field {
@@ -237,7 +239,7 @@ select:focus {
   height: 100%;
   place-items: center;
   background: var(--panel-soft);
-  color: var(--blue-dark);
+  color: var(--rose-dark);
 }
 
 .money-field input {
@@ -275,8 +277,8 @@ select:focus {
 
 .segmented button.active {
   background: #ffffff;
-  color: var(--blue-dark);
-  box-shadow: 0 6px 18px rgba(32, 80, 120, 0.12);
+  color: var(--rose-dark);
+  box-shadow: 0 6px 18px rgba(82, 58, 40, 0.12);
 }
 
 .section-divider {
@@ -313,7 +315,38 @@ select:focus {
   width: 18px;
   height: 18px;
   min-height: 18px;
-  accent-color: var(--blue);
+  accent-color: var(--rose);
+}
+
+.example-note,
+.allowance-note {
+  border-radius: 8px;
+  border: 1px solid rgba(190, 156, 58, 0.38);
+  background: #fff9eb;
+  color: var(--ink);
+}
+
+.example-note {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 18px;
+  padding: 12px;
+  line-height: 1.45;
+}
+
+.example-note strong,
+.allowance-note strong {
+  color: var(--rose-dark);
+}
+
+.example-note span,
+.allowance-note {
+  font-size: 0.86rem;
+}
+
+.allowance-note {
+  margin-top: 12px;
+  padding: 10px 12px;
 }
 
 .calculator-section {
@@ -361,7 +394,7 @@ select:focus {
   width: fit-content;
   border-radius: 999px;
   background: var(--panel-soft);
-  color: var(--blue-dark);
+  color: var(--rose-dark);
   padding: 5px 10px;
   font-size: 0.76rem;
   font-weight: 800;
@@ -382,7 +415,7 @@ select:focus {
   display: grid;
   gap: 2px;
   border-radius: 8px;
-  background: var(--blue-dark);
+  background: linear-gradient(135deg, #191715, #8c5b67);
   color: #ffffff;
   padding: 18px;
 }
@@ -477,8 +510,8 @@ select:focus {
   display: grid;
   gap: 5px;
   min-height: 74px;
-  border-left: 3px solid var(--cyan);
-  background: #f7fbfd;
+  border-left: 3px solid var(--gold);
+  background: #fbf7ef;
   padding: 10px 12px;
 }
 
@@ -598,7 +631,7 @@ select:focus {
 }
 
 .baseline-grid div {
-  border-top: 2px solid var(--cyan);
+  border-top: 2px solid var(--gold);
   padding-top: 8px;
 }
 

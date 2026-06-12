@@ -35,6 +35,7 @@ type AuditFinding = {
 type FormState = {
   orderType: OrderType;
   network: NetworkStatus;
+  presetNote: string;
   customerName: string;
   claimNumber: string;
   collected: number;
@@ -47,6 +48,7 @@ type FormState = {
   frameCopay: number;
   frameInAllowance: number;
   frameOutAllowance: number;
+  frameBenefitCount: number;
   lensCopay: number;
   baseLens: string;
   progressive: string;
@@ -455,6 +457,7 @@ const addOnOptions: OptionItem[] = [
 const initialForm: FormState = {
   orderType: "glasses",
   network: "in",
+  presetNote: "",
   customerName: "Walk-in order",
   claimNumber: "",
   collected: 0,
@@ -467,6 +470,7 @@ const initialForm: FormState = {
   frameCopay: 20,
   frameInAllowance: 260,
   frameOutAllowance: 130,
+  frameBenefitCount: 1,
   lensCopay: 20,
   baseLens: "single",
   progressive: "none",
@@ -485,6 +489,25 @@ const initialForm: FormState = {
   specialtyFit: false,
 };
 
+const handwrittenExample: FormState = {
+  ...initialForm,
+  presetNote:
+    "Example: frame $292, split $260 allowance across 2 yearly frame benefits, plus $20 copay, $15 tint, and $40 poly.",
+  customerName: "Example calculation",
+  claimNumber: "Frame split",
+  frameRetail: 292,
+  frameBenefitCount: 2,
+  lensCopay: 0,
+  baseLens: "single",
+  material: "poly",
+  arCoating: "none",
+  scratch: "none",
+  tint: "solid",
+  selectedAddOns: [],
+  uvNeeded: false,
+  safetyMaterialNeeded: true,
+};
+
 function findOption(items: OptionItem[], id: string) {
   return items.find((item) => item.id === id) ?? items[0];
 }
@@ -496,6 +519,12 @@ function formatMoney(value: number) {
 function toNumber(value: string) {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function effectiveFrameAllowance(form: FormState) {
+  const allowance =
+    form.network === "in" ? form.frameInAllowance : form.frameOutAllowance;
+  return allowance / Math.max(1, form.frameBenefitCount);
 }
 
 function makeLine(option: OptionItem): LineItem | null {
@@ -573,12 +602,17 @@ export default function Home() {
 
     if (form.orderType === "glasses") {
       if (form.includeFrame) {
-        const allowance =
-          form.network === "in"
-            ? form.frameInAllowance
-            : form.frameOutAllowance;
+        const allowance = effectiveFrameAllowance(form);
         const overage = Math.max(0, form.frameRetail - allowance);
         const patient = Math.min(form.frameRetail, form.frameCopay + overage);
+        const splitNote =
+          form.frameBenefitCount > 1
+            ? `split from ${formatMoney(
+                form.network === "in"
+                  ? form.frameInAllowance
+                  : form.frameOutAllowance,
+              )} across ${form.frameBenefitCount} frame benefits`
+            : "full allowance";
 
         lines.push({
           label: "Frame",
@@ -588,7 +622,7 @@ export default function Home() {
           source,
           note: `${formatMoney(form.frameCopay)} copay, ${formatMoney(
             allowance,
-          )} allowance`,
+          )} allowance (${splitNote})`,
         });
       }
 
@@ -756,17 +790,16 @@ export default function Home() {
       form.orderType === "glasses" &&
       form.includeFrame &&
       form.frameRetail >
-        (form.network === "in" ? form.frameInAllowance : form.frameOutAllowance)
+        effectiveFrameAllowance(form)
     ) {
       findings.push({
         level: "good",
         title: "Frame overage captured",
-        detail: "Frame retail exceeds the selected allowance, so the overage is included.",
-        amount:
-          form.frameRetail -
-          (form.network === "in"
-            ? form.frameInAllowance
-            : form.frameOutAllowance),
+        detail:
+          form.frameBenefitCount > 1
+            ? "Frame allowance is split across the yearly frame benefits before calculating overage."
+            : "Frame retail exceeds the selected allowance, so the overage is included.",
+        amount: form.frameRetail - effectiveFrameAllowance(form),
       });
     }
 
@@ -792,15 +825,26 @@ export default function Home() {
     <main className="app-shell">
       <header className="topbar">
         <div className="brand">
-          <span className="brand-mark" aria-hidden="true">
-            CR
-          </span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            className="brand-logo"
+            src="/optic-eyewear-logo.png"
+            alt="Optic Eyewear Shop TX"
+          />
           <div>
-            <p>Optical claim desk</p>
+            <p>Optic Eyewear Shop TX</p>
             <h1>Automatic claim reconciliation</h1>
           </div>
         </div>
         <div className="top-actions no-print">
+          <button
+            className="ghost-button"
+            type="button"
+            onClick={() => setForm(handwrittenExample)}
+            title="Load handwritten example"
+          >
+            Load $237 example
+          </button>
           <button
             className="ghost-button"
             type="button"
@@ -826,6 +870,12 @@ export default function Home() {
             <p>Order inputs</p>
             <h2>Claim setup</h2>
           </div>
+          {form.presetNote ? (
+            <div className="example-note">
+              <strong>Loaded example</strong>
+              <span>{form.presetNote}</span>
+            </div>
+          ) : null}
 
           <div className="field-row">
             <label>
@@ -1040,7 +1090,7 @@ export default function Home() {
                 </label>
               </div>
 
-              <div className="field-row">
+              <div className="field-row three">
                 <label>
                   In-network allowance
                   <span className="money-field">
@@ -1075,6 +1125,30 @@ export default function Home() {
                     />
                   </span>
                 </label>
+                <label>
+                  Frame benefits
+                  <span className="money-field">
+                    <span>#</span>
+                    <input
+                      type="number"
+                      min="1"
+                      value={form.frameBenefitCount}
+                      onChange={(event) =>
+                        setField(
+                          "frameBenefitCount",
+                          Math.max(1, toNumber(event.target.value)),
+                        )
+                      }
+                    />
+                  </span>
+                </label>
+              </div>
+              <div className="allowance-note">
+                Effective frame allowance:{" "}
+                <strong>{formatMoney(effectiveFrameAllowance(form))}</strong>
+                {form.frameBenefitCount > 1
+                  ? " after splitting the yearly allowance"
+                  : ""}
               </div>
 
               <div className="field-row">
@@ -1407,7 +1481,7 @@ export default function Home() {
               </div>
               <div>
                 <dt>Frame</dt>
-                <dd>$20 copay, $260/$130 allowance</dd>
+                <dd>$20 copay, $260/$130 allowance, split if 2 benefits</dd>
               </div>
               <div>
                 <dt>Spectacle lens</dt>

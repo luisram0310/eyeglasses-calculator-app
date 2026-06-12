@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Optical Claim Reconciliation",
-  description: "A reconciliation calculator for optical insurance orders.",
+  title: "Optic Eyewear Claim Reconciliation",
+  description: "A branded reconciliation calculator for Optic Eyewear insurance orders.",
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",
