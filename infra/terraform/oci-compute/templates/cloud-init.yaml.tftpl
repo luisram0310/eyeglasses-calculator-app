@@ -1,10 +1,4 @@
 #cloud-config
-package_update: true
-packages:
-  - curl
-  - git
-  - nginx
-
 write_files:
   - path: /etc/systemd/system/${app_name}.service
     permissions: "0644"
@@ -27,37 +21,83 @@ write_files:
       [Install]
       WantedBy=multi-user.target
 
-  - path: /etc/nginx/conf.d/${app_name}.conf
-    permissions: "0644"
+  - path: /usr/local/sbin/bootstrap-${app_name}.sh
+    permissions: "0755"
     content: |
+      #!/usr/bin/env bash
+      set -euo pipefail
+
+      APP_NAME="${app_name}"
+      APP_DIR="/opt/${app_name}"
+      APP_PORT="${app_port}"
+      APP_REPO="${app_repository_url}"
+      APP_BRANCH="${app_branch}"
+
+      retry() {
+        local attempt
+        for attempt in 1 2 3 4 5; do
+          if "$@"; then
+            return 0
+          fi
+          echo "retry $${attempt}/5 failed: $*" >&2
+          sleep "$((attempt * 8))"
+        done
+        "$@"
+      }
+
+      dnf clean all || true
+      retry dnf -y --setopt=skip_if_unavailable=True install curl git nginx
+
+      if ! command -v node >/dev/null 2>&1; then
+        retry bash -lc "curl -fsSL https://rpm.nodesource.com/setup_22.x | bash -"
+      fi
+      retry dnf -y --setopt=skip_if_unavailable=True install nodejs
+
+      if ! id opticapp >/dev/null 2>&1; then
+        useradd --system --create-home --shell /sbin/nologin opticapp
+      fi
+
+      rm -rf "$APP_DIR"
+      git clone --branch "$APP_BRANCH" --depth 1 "$APP_REPO" "$APP_DIR"
+      chown -R opticapp:opticapp "$APP_DIR"
+
+      sudo -u opticapp npm --prefix "$APP_DIR" ci
+      sudo -u opticapp npm --prefix "$APP_DIR" run build
+
+      mkdir -p /etc/nginx/conf.d
+      cat > "/etc/nginx/conf.d/$APP_NAME.conf" <<NGINX
       server {
         listen 80;
         server_name ${server_name};
 
         location / {
-          proxy_pass http://127.0.0.1:${app_port};
+          proxy_pass http://127.0.0.1:$APP_PORT;
           proxy_http_version 1.1;
-          proxy_set_header Host $host;
-          proxy_set_header X-Real-IP $remote_addr;
-          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-          proxy_set_header X-Forwarded-Proto $scheme;
-          proxy_set_header Upgrade $http_upgrade;
+          proxy_set_header Host \$host;
+          proxy_set_header X-Real-IP \$remote_addr;
+          proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+          proxy_set_header X-Forwarded-Proto \$scheme;
+          proxy_set_header Upgrade \$http_upgrade;
           proxy_set_header Connection "upgrade";
         }
       }
+      NGINX
+
+      if command -v setsebool >/dev/null 2>&1; then
+        setsebool -P httpd_can_network_connect 1 || true
+      fi
+
+      systemctl daemon-reload
+      nginx -t
+      systemctl enable --now "$APP_NAME.service"
+      systemctl restart "$APP_NAME.service"
+      systemctl enable --now nginx
+      systemctl restart nginx
+
+      if command -v firewall-cmd >/dev/null 2>&1; then
+        firewall-cmd --permanent --add-service=http || true
+        firewall-cmd --reload || true
+      fi
 
 runcmd:
-  - dnf install -y oracle-epel-release-el9 || true
-  - curl -fsSL https://rpm.nodesource.com/setup_22.x | bash -
-  - dnf install -y nodejs
-  - id opticapp || useradd --system --create-home --shell /sbin/nologin opticapp
-  - rm -rf /opt/${app_name}
-  - git clone --branch ${app_branch} --depth 1 ${app_repository_url} /opt/${app_name}
-  - chown -R opticapp:opticapp /opt/${app_name}
-  - sudo -u opticapp npm --prefix /opt/${app_name} ci
-  - sudo -u opticapp npm --prefix /opt/${app_name} run build
-  - nginx -t
-  - systemctl enable --now ${app_name}.service
-  - systemctl enable --now nginx
-  - firewall-cmd --permanent --add-service=http || true
-  - firewall-cmd --reload || true
+  - /usr/local/sbin/bootstrap-${app_name}.sh

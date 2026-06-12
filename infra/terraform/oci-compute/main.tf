@@ -168,4 +168,9 @@ resource "oci_core_instance" "app" {
       server_name        = var.server_name
     }))
   }
+
+  lifecycle {
+    # Cloud-init only runs at first boot; avoid replacing a live VM for bootstrap script edits.
+    ignore_changes = [metadata["user_data"]]
+  }
 }
