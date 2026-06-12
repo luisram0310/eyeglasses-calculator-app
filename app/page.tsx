@@ -76,6 +76,14 @@ const money = new Intl.NumberFormat("en-US", {
 
 const lensOptions: OptionItem[] = [
   {
+    id: "none",
+    label: "No base lens selected",
+    member: 0,
+    retail: 0,
+    category: "Spectacle lens",
+    source,
+  },
+  {
     id: "single",
     label: "Single vision",
     member: 20,
@@ -465,27 +473,27 @@ const initialForm: FormState = {
   includeExam: false,
   retinalImaging: false,
   diabeticExam: false,
-  includeFrame: true,
+  includeFrame: false,
   frameRetail: 285,
   frameCopay: 20,
   frameInAllowance: 260,
   frameOutAllowance: 130,
   frameBenefitCount: 1,
   lensCopay: 20,
-  baseLens: "single",
+  baseLens: "none",
   progressive: "none",
   material: "standard",
-  arCoating: "standard",
+  arCoating: "none",
   photochromic: "none",
-  scratch: "standard",
+  scratch: "none",
   tint: "none",
-  selectedAddOns: ["uv"],
-  uvNeeded: true,
+  selectedAddOns: [],
+  uvNeeded: false,
   safetyMaterialNeeded: false,
   contactRetail: 360,
   contactAllowance: 260,
   medicallyNecessaryContacts: false,
-  contactFit: true,
+  contactFit: false,
   specialtyFit: false,
 };
 
@@ -496,9 +504,10 @@ const handwrittenExample: FormState = {
   customerName: "Example calculation",
   claimNumber: "Frame split",
   frameRetail: 292,
+  includeFrame: true,
   frameBenefitCount: 2,
   lensCopay: 0,
-  baseLens: "single",
+  baseLens: "none",
   material: "poly",
   arCoating: "none",
   scratch: "none",
@@ -627,14 +636,16 @@ export default function Home() {
       }
 
       const baseLens = findOption(lensOptions, form.baseLens);
-      lines.push({
-        label: baseLens.label,
-        group: "Spectacle lens",
-        retail: baseLens.retail,
-        patient: form.lensCopay,
-        source,
-        note: "Base spectacle lens copay",
-      });
+      if (baseLens.id !== "none") {
+        lines.push({
+          label: baseLens.label,
+          group: "Spectacle lens",
+          retail: baseLens.retail,
+          patient: form.lensCopay,
+          source,
+          note: "Base spectacle lens copay",
+        });
+      }
 
       [
         findOption(progressiveOptions, form.progressive),
