@@ -1,0 +1,63 @@
+#cloud-config
+package_update: true
+packages:
+  - curl
+  - git
+  - nginx
+
+write_files:
+  - path: /etc/systemd/system/${app_name}.service
+    permissions: "0644"
+    content: |
+      [Unit]
+      Description=Optic Eyewear Claim Reconciliation App
+      After=network-online.target
+      Wants=network-online.target
+
+      [Service]
+      Type=simple
+      User=opticapp
+      WorkingDirectory=/opt/${app_name}
+      Environment=NODE_ENV=production
+      Environment=PORT=${app_port}
+      ExecStart=/usr/bin/npm run start -- --port ${app_port}
+      Restart=always
+      RestartSec=10
+
+      [Install]
+      WantedBy=multi-user.target
+
+  - path: /etc/nginx/conf.d/${app_name}.conf
+    permissions: "0644"
+    content: |
+      server {
+        listen 80;
+        server_name ${server_name};
+
+        location / {
+          proxy_pass http://127.0.0.1:${app_port};
+          proxy_http_version 1.1;
+          proxy_set_header Host $host;
+          proxy_set_header X-Real-IP $remote_addr;
+          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+          proxy_set_header X-Forwarded-Proto $scheme;
+          proxy_set_header Upgrade $http_upgrade;
+          proxy_set_header Connection "upgrade";
+        }
+      }
+
+runcmd:
+  - dnf install -y oracle-epel-release-el9 || true
+  - curl -fsSL https://rpm.nodesource.com/setup_22.x | bash -
+  - dnf install -y nodejs
+  - id opticapp || useradd --system --create-home --shell /sbin/nologin opticapp
+  - rm -rf /opt/${app_name}
+  - git clone --branch ${app_branch} --depth 1 ${app_repository_url} /opt/${app_name}
+  - chown -R opticapp:opticapp /opt/${app_name}
+  - sudo -u opticapp npm --prefix /opt/${app_name} ci
+  - sudo -u opticapp npm --prefix /opt/${app_name} run build
+  - nginx -t
+  - systemctl enable --now ${app_name}.service
+  - systemctl enable --now nginx
+  - firewall-cmd --permanent --add-service=http || true
+  - firewall-cmd --reload || true

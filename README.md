@@ -40,6 +40,22 @@ Open `http://localhost:3000/` after starting the dev server.
 - `app/globals.css`: responsive visual design and print styles
 - `public/optic-eyewear-logo.png`: Optic Eyewear logo asset
 - `.openai/hosting.json`: Sites hosting configuration
+- `infra/terraform/oci-compute/`: OCI Compute VM deployment stack
+
+## OCI Deployment
+
+The included Terraform stack can host the app on an OCI Compute VM with a public
+IP restricted to approved source IPs only.
+
+Defaults and guardrails:
+
+- Shape: `VM.Standard.A1.Flex`
+- OCPUs: pinned to `1`
+- Memory: pinned to `8` GB
+- Allowed source IPs: your `home_ip_cidr` plus `166.205.97.28/32`
+- Allowed ports: `22`, `80`, and `443`
+
+See `infra/terraform/oci-compute/README.md` for setup and apply steps.
 
 ## Baseline Notes
 
