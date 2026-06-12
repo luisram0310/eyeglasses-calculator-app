@@ -1,16 +1,16 @@
-# Optic Eyewear Claim Reconciliation
+# Optic Eyewear Claim Reconciliation App
 
-A practice web app for calculating eyeglasses and contact lens insurance
-reconciliations for Optic Eyewear Shop TX. It uses a Versant Health-style
-baseline for common member charges, allowances, and lens add-ons, then compares
-expected patient responsibility against collected patient payment and claim
-payment.
+An Optic Eyewear Shop TX web app for calculating eyeglasses and contact lens
+insurance reconciliations. It helps the team estimate patient responsibility,
+check claim payment expectations, and catch missed charges before an order loses
+money.
 
 ## What It Does
 
 - Calculates out-of-pocket responsibility for eyeglasses and contact orders.
-- Includes frame allowance, frame copay, base lens copay, UV, AR, scratch,
-  progressive, material, tint, contact lens, and fitting lines.
+- Uses editable insurance plan defaults for frame allowance, frame copay, base
+  lens copay, UV, AR, scratch, progressive, material, tint, contact lens, and
+  fitting lines.
 - Flags likely missed charges such as UV, safety material, fitting fees, patient
   balances, overcollection, and claim underpayment.
 - Supports splitting frame allowance across multiple yearly frame benefits, so
@@ -43,10 +43,9 @@ Open `http://localhost:3000/` after starting the dev server.
 
 ## Baseline Notes
 
-The starting values are editable assumptions based on the supplied Versant
-Health PDF, including $20 routine exam and spectacle lens copays, $20 frame
-copay, $260 in-network frame/contact allowance, $130 out-of-network frame
-allowance, $12 UV, AR tiers, progressive tiers, poly/high-index tiers, and
-contact fitting lines. When a plan allows 2 frame benefits in the year, the app
-can split the allowance across those benefits before calculating the frame
-overage.
+The starting values are editable plan assumptions for Optic Eyewear’s insurance
+order workflow, including routine exam and spectacle lens copays, frame copay,
+frame/contact allowances, UV, AR tiers, progressive tiers, poly/high-index
+tiers, and contact fitting lines. When a plan allows 2 frame benefits in the
+year, the app can split the allowance across those benefits before calculating
+the frame overage.
